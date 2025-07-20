@@ -1,4 +1,4 @@
-import { Post } from "./App";
+import { Post } from "../App";
 
 interface SidebarProps {
   grouped: Record<string, Post[]>;

@@ -1,4 +1,4 @@
-import { Post } from "./App";
+import { Post } from "../App";
 
 interface ArticleProps {
   post: Post | null;
@@ -31,6 +31,10 @@ export default function Article({
       <div
         style={{ marginTop: "1em" }}
         dangerouslySetInnerHTML={{ __html: post.description }}
+      />
+      <div
+        style={{ marginTop: "1em" }}
+        dangerouslySetInnerHTML={{ __html: post.content }}
       />
     </div>
   );

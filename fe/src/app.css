@@ -212,3 +212,7 @@ button:hover,
     padding: 1em;
   }
 }
+
+#toolbar {
+  margin: 1em;
+}
