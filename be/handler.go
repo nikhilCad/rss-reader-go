@@ -10,6 +10,32 @@ import (
 	"github.com/mmcdole/gofeed"
 )
 
+// ArticleParseResponse represents the parsed article data.
+type ArticleParseResponse struct {
+	Title   string `json:"title"`
+	Content string `json:"content"`
+	Byline  string `json:"byline"`
+}
+
+// ParseArticleHandler handles on-demand article parsing.
+
+func ParseArticleHandler(w http.ResponseWriter, r *http.Request) {
+	urlStr := r.URL.Query().Get("url")
+	if urlStr == "" {
+		http.Error(w, "Missing url parameter", http.StatusBadRequest)
+		return
+	}
+
+	result, err := ParseArticleFromURL(urlStr)
+	if err != nil {
+		http.Error(w, "Failed to parse article: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(result)
+}
+
 // FetchFeedTitle tries to fetch the RSS feed and extract its <title>
 func FetchFeedTitle(url string) string {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)

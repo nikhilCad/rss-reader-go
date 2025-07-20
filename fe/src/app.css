@@ -46,7 +46,7 @@ h1 {
   padding-top: 1em;
   padding-bottom: 1em;
   box-sizing: border-box;
-  height: 100%;
+  height: 80vh;
   overflow-y: auto;
 }
 
@@ -54,6 +54,7 @@ h1 {
   flex: 1;
   padding: 2em 2.5em;
   background: var(--background);
+  max-height: 80vh;
   overflow-y: auto;
 }
 

@@ -11,6 +11,7 @@ export default defineConfig({
       "/read": "http://localhost:8080",
       "/unread": "http://localhost:8080",
       "/refresh": "http://localhost:8080",
+      "/parse-article": "http://localhost:8080",
       // Add any other API endpoints you use
     },
   },

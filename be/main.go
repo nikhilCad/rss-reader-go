@@ -21,6 +21,7 @@ func main() {
 	http.HandleFunc("/read", readHandler)
 	http.HandleFunc("/unread", readHandler)
 	http.HandleFunc("/refresh", refreshHandler)
+	http.HandleFunc("/parse-article", ParseArticleHandler)
 
 	// Sample RSS feed
 	StartSampleFeeds()

@@ -1,4 +1,6 @@
+import { useEffect, useState } from "preact/hooks";
 import { Post } from "../App";
+import ArticleTopBar from "./ArticleTopBar";
 
 interface ArticleProps {
   post: Post | null;
@@ -13,29 +15,57 @@ export default function Article({
   markRead,
   markUnread,
 }: ArticleProps) {
+  const [parsed, setParsed] = useState<null | {
+    title: string;
+    content: string;
+    byline: string;
+  }>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    setParsed(null);
+    setError(null);
+  }, [post && post?.link]);
+
+  useEffect(() => {
+    setParsed(null);
+    setError(null);
+  }, [post && post?.link]);
+
   if (!post) return null;
+
+  const content =
+    post.title + (parsed ? parsed.content : post.description || post.content);
+
   return (
     <div id="article-detail">
-      <div id="article-toolbar">
-        <button
-          type="button"
-          onClick={() => (isRead ? markUnread(post.link) : markRead(post.link))}
-        >
-          {isRead ? "Mark as Unread" : "Mark as Read"}
-        </button>
-      </div>
+      <ArticleTopBar
+        isRead={isRead}
+        onMarkRead={() => markRead(post.link)}
+        onMarkUnread={() => markUnread(post.link)}
+        postLink={post.link}
+        onParsed={(parsed, error) => {
+          setParsed(parsed);
+          setError(error);
+        }}
+        content={content}
+      />
       <h2>{post.title}</h2>
       <a href={post.link} target="_blank" rel="noopener noreferrer">
         Read original
       </a>
+      {error && <div style={{ color: "red" }}>Error: {error}</div>}
       <div
         style={{ marginTop: "1em" }}
-        dangerouslySetInnerHTML={{ __html: post.description }}
+        dangerouslySetInnerHTML={{
+          __html: content,
+        }}
       />
-      <div
-        style={{ marginTop: "1em" }}
-        dangerouslySetInnerHTML={{ __html: post.content }}
-      />
+      {parsed && parsed.byline && (
+        <div style={{ marginTop: "1em", fontStyle: "italic" }}>
+          By: {parsed.byline}
+        </div>
+      )}
     </div>
   );
 }

@@ -96,7 +96,19 @@ export default function App() {
           />
         )}
         {activePage === "settings" && (
-          <div style={{ padding: 32 }}>Settings page (coming soon)</div>
+          <div style={{ padding: 32 }}>
+            Settings page (coming soon)
+            <ul>
+              <li>Parse Youtube Links</li>
+              <li>Podcast</li>
+              <li>Better UI</li>
+              <li>Better Feed Management</li>
+              <li>AI summary of all feed titles</li>
+              <li>AI summary of fetched feed content</li>
+              <li>Better full article fetching</li>
+              <li>Actual Setting Page</li>
+            </ul>
+          </div>
         )}
       </div>
     </div>
