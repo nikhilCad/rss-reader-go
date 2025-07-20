@@ -7,7 +7,7 @@ A modern RSS reader application built with Go backend, Preact frontend, and a te
 ### Backend (Go)
 
 - **RSS Feed Management**: Add, remove, and manage RSS feed subscriptions
-- **Smart Caching**: SQLite-based caching system to avoid rate limits and ensure fast loading
+- **Smart Caching**: SQLite-based caching system to avoid rate limits and ensure fast loading. [Detailed implementation explanation](be/readme.md)
 - **Article Parsing**: Extract full article content from web pages using go-readability
 - **Podcast Support**: Handle media enclosures for podcast episodes with audio player support
 - **Read Status Tracking**: Mark articles as read/unread with persistent storage
