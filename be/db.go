@@ -67,6 +67,23 @@ func NewSQLiteDB(path string) (DB, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	const createArticlesTableSQL = `
+		CREATE TABLE IF NOT EXISTS articles (
+			id INTEGER PRIMARY KEY AUTOINCREMENT,
+			title TEXT,
+			link TEXT UNIQUE,
+			description TEXT,
+			content TEXT,
+			source TEXT,
+			pubdate TEXT,
+			fetched_at TEXT
+		);`
+	_, err = db.Exec(createArticlesTableSQL)
+	if err != nil {
+		return nil, err
+	}
+
 	return &sqliteDB{db: db}, nil
 }
 
@@ -101,6 +118,11 @@ func (s *sqliteDB) AddFeed(url string) error {
 
 func (s *sqliteDB) RemoveFeed(url string) error {
 	_, err := s.db.Exec("DELETE FROM feeds WHERE url = ?", url)
+	if err != nil {
+		return err
+	}
+	// Also delete articles from this feed
+	_, err = s.db.Exec("DELETE FROM articles WHERE source = ?", url)
 	return err
 }
 

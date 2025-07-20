@@ -8,8 +8,10 @@ import (
 type Post struct {
 	Title       string `json:"title"`
 	Link        string `json:"link"`
+	Content     string `json:"content"`
 	Description string `json:"description"`
 	Source      string `json:"source"`
+	PubDate     string `json:"pubdate"`
 }
 
 func ParseFeed(data []byte) ([]Post, error) {

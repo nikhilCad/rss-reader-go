@@ -1,45 +1,64 @@
 import { useEffect, useState } from "preact/hooks";
-import "./App.css";
+import "./app.css";
+import Sidebar from "./Sidebar";
+import Article from "./Article";
+
+export interface Feed {
+  url: string;
+}
+
+export interface PostResponse {
+  fromCache: boolean;
+  articles: Post[];
+}
+
+export interface Post {
+  title: string;
+  link: string;
+  description: string;
+  source?: string;
+}
 
 export default function App() {
-  const [feeds, setFeeds] = useState([]);
-  const [readLinks, setReadLinks] = useState(new Set());
-  const [posts, setPosts] = useState([]);
-  const [selected, setSelected] = useState(null);
+  const [feeds, setFeeds] = useState<Feed[]>([]);
+  const [readLinks, setReadLinks] = useState<Set<string>>(new Set());
+  const [posts, setPosts] = useState<Post[]>([]);
+  const [selected, setSelected] = useState<Post | null>(null);
+  const [refreshing, setRefreshing] = useState(false);
 
-  // Fetch feeds and read links on mount
   useEffect(() => {
     reloadFeedsAndPosts();
   }, []);
 
-  async function fetchFeeds() {
+  async function fetchFeeds(): Promise<Feed[]> {
     const res = await fetch("/feeds");
     return await res.json();
   }
 
-  async function fetchReadLinks() {
+  async function fetchReadLinks(): Promise<string[]> {
     const res = await fetch("/read");
     return await res.json();
   }
 
-  async function fetchPosts() {
+  async function fetchPosts(): Promise<PostResponse> {
     const res = await fetch("/posts");
     return await res.json();
   }
 
   async function reloadFeedsAndPosts() {
-    const [feeds, read, posts] = await Promise.all([
+    const [feedsFetched, read, postsFetched] = await Promise.all([
       fetchFeeds(),
       fetchReadLinks(),
       fetchPosts(),
     ]);
-    setFeeds(feeds);
+    setFeeds(feedsFetched);
     setReadLinks(new Set(read));
-    setPosts(posts);
-    if (posts.length > 0) setSelected(posts[0]);
+    setPosts(postsFetched?.articles);
+    if (postsFetched?.articles.length > 0)
+      setSelected(postsFetched?.articles[0]);
   }
 
-  async function addFeed(url) {
+  async function addFeed(url: string) {
     await fetch("/feeds", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -48,7 +67,7 @@ export default function App() {
     await reloadFeedsAndPosts();
   }
 
-  async function removeFeed(url) {
+  async function removeFeed(url: string) {
     await fetch("/feeds", {
       method: "DELETE",
       headers: { "Content-Type": "application/json" },
@@ -57,7 +76,7 @@ export default function App() {
     await reloadFeedsAndPosts();
   }
 
-  async function markRead(link) {
+  async function markRead(link: string) {
     await fetch("/read", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -66,7 +85,7 @@ export default function App() {
     setReadLinks(new Set([...readLinks, link]));
   }
 
-  async function markUnread(link) {
+  async function markUnread(link: string) {
     await fetch("/unread", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -77,22 +96,34 @@ export default function App() {
     setReadLinks(newSet);
   }
 
-  // Group posts by source
-  const grouped = {};
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    try {
+      await fetch("/refresh", { method: "POST" });
+      await reloadFeedsAndPosts();
+    } catch (e) {
+      alert("Failed to refresh feeds");
+    }
+    setRefreshing(false);
+  };
+
+  const grouped: Record<string, Post[]> = {};
   posts.forEach((post) => {
     const source = post.source || "Feed";
     if (!grouped[source]) grouped[source] = [];
     grouped[source].push(post);
   });
 
-  // UI
   return (
     <div>
       <h1>RSS Reader</h1>
       <FeedControls feeds={feeds} addFeed={addFeed} removeFeed={removeFeed} />
+      <button onClick={handleRefresh} disabled={refreshing}>
+        {refreshing ? "Refreshing..." : "Refresh Feeds"}
+      </button>
       <div id="main-container">
         <div id="left-pane">
-          <FeedList
+          <Sidebar
             grouped={grouped}
             readLinks={readLinks}
             selected={selected}
@@ -100,21 +131,25 @@ export default function App() {
           />
         </div>
         <div id="right-pane">
-          {selected && (
-            <ArticleDetail
-              post={selected}
-              isRead={readLinks.has(selected.link)}
-              markRead={markRead}
-              markUnread={markUnread}
-            />
-          )}
+          <Article
+            post={selected}
+            isRead={!!(selected && readLinks.has(selected.link))}
+            markRead={markRead}
+            markUnread={markUnread}
+          />
         </div>
       </div>
     </div>
   );
 }
 
-function FeedControls({ feeds, addFeed, removeFeed }) {
+interface FeedControlsProps {
+  feeds: Feed[];
+  addFeed: (url: string) => void;
+  removeFeed: (url: string) => void;
+}
+
+function FeedControls({ feeds, addFeed, removeFeed }: FeedControlsProps) {
   const [url, setUrl] = useState("");
   return (
     <div id="feed-controls">
@@ -134,16 +169,16 @@ function FeedControls({ feeds, addFeed, removeFeed }) {
           placeholder="Add RSS feed URL..."
           required
           value={url}
-          onInput={(e) => setUrl(e.target.value)}
+          onInput={(e) => setUrl((e.target as HTMLInputElement).value)}
         />
         <button type="submit">Add Feed</button>
       </form>
       <div id="feed-list-controls">
         {feeds.map((feed) => (
-          <div class="feed-url-row" key={feed.url}>
-            <span class="feed-url-text">{feed.url}</span>
+          <div className="feed-url-row" key={feed.url}>
+            <span className="feed-url-text">{feed.url}</span>
             <button
-              class="remove-feed-btn"
+              className="remove-feed-btn"
               onClick={() => removeFeed(feed.url)}
               type="button"
             >
@@ -152,56 +187,6 @@ function FeedControls({ feeds, addFeed, removeFeed }) {
           </div>
         ))}
       </div>
-    </div>
-  );
-}
-
-function FeedList({ grouped, readLinks, selected, setSelected }) {
-  return (
-    <div id="feed-list">
-      {Object.keys(grouped).map((source) => (
-        <div key={source}>
-          <div class="feed-source">{source}</div>
-          {grouped[source].map((post) => (
-            <a
-              class={`article-title${readLinks.has(post.link) ? " read" : ""}${
-                selected && selected.link === post.link ? " active" : ""
-              }`}
-              href="#"
-              onClick={(e) => {
-                e.preventDefault();
-                setSelected(post);
-              }}
-              key={post.link}
-            >
-              {post.title}
-            </a>
-          ))}
-        </div>
-      ))}
-    </div>
-  );
-}
-
-function ArticleDetail({ post, isRead, markRead, markUnread }) {
-  return (
-    <div>
-      <div id="article-toolbar">
-        <button
-          type="button"
-          onClick={() => (isRead ? markUnread(post.link) : markRead(post.link))}
-        >
-          {isRead ? "Mark as Unread" : "Mark as Read"}
-        </button>
-      </div>
-      <h2>{post.title}</h2>
-      <a href={post.link} target="_blank" rel="noopener noreferrer">
-        Read original
-      </a>
-      <div
-        style="margin-top:1em;"
-        dangerouslySetInnerHTML={{ __html: post.description }}
-      />
     </div>
   );
 }
