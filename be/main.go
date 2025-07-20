@@ -14,10 +14,8 @@ func main() {
 	}
 	defer db.Close()
 
-	// Remove hardcoded RSS fetch logic
-
-	http.HandleFunc("/posts", postsHandler) // API endpoint
-	http.HandleFunc("/feeds", feedsHandler) // Feed management API
+	http.HandleFunc("/posts", postsHandler)
+	http.HandleFunc("/feeds", feedsHandler)
 	http.HandleFunc("/read", readHandler)
 	http.HandleFunc("/unread", readHandler)
 	http.HandleFunc("/refresh", refreshHandler)
