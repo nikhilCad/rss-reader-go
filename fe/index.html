@@ -1,20 +1,13 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <title>RSS Reader</title>
-    <link rel="stylesheet" href="/static/style.css" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Vite + Preact</title>
   </head>
   <body>
-    <h1>RSS Reader</h1>
-    <div id="main-container">
-      <div id="left-pane">
-        <div id="feed-list"></div>
-      </div>
-      <div id="right-pane">
-        <div id="article-detail">Select an article to view details.</div>
-      </div>
-    </div>
-    <script src="/static/app.js"></script>
+    <div id="app"></div>
+    <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>
