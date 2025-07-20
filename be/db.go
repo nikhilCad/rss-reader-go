@@ -9,8 +9,9 @@ import (
 // Add Feed struct
 // Feed represents an RSS feed source
 type Feed struct {
-	ID  int    `json:"id"`
-	URL string `json:"url"`
+	ID       int    `json:"id"`
+	URL      string `json:"url"`
+	FeedName string `json:"feed_name"`
 }
 
 // DB is an interface for database operations.
@@ -19,7 +20,7 @@ type DB interface {
 	GetAllPosts() ([]Post, error)
 	Close() error
 	// Feed management
-	AddFeed(url string) error
+	AddFeed(url string, name string) error
 	RemoveFeed(url string) error
 	ListFeeds() ([]Feed, error)
 	// Add to DB interface
@@ -53,7 +54,8 @@ func NewSQLiteDB(path string) (DB, error) {
 	createFeeds := `
 	CREATE TABLE IF NOT EXISTS feeds (
 		id INTEGER PRIMARY KEY AUTOINCREMENT,
-		url TEXT UNIQUE
+		url TEXT UNIQUE,
+		feed_name TEXT
 	);`
 	_, err = db.Exec(createFeeds)
 	if err != nil {
@@ -111,8 +113,8 @@ func (s *sqliteDB) GetAllPosts() ([]Post, error) {
 }
 
 // Feed management methods
-func (s *sqliteDB) AddFeed(url string) error {
-	_, err := s.db.Exec("INSERT OR IGNORE INTO feeds (url) VALUES (?)", url)
+func (s *sqliteDB) AddFeed(url, name string) error {
+	_, err := s.db.Exec("INSERT OR IGNORE INTO feeds (url, feed_name) VALUES (?, ?)", url, name)
 	return err
 }
 
@@ -127,7 +129,7 @@ func (s *sqliteDB) RemoveFeed(url string) error {
 }
 
 func (s *sqliteDB) ListFeeds() ([]Feed, error) {
-	rows, err := s.db.Query("SELECT id, url FROM feeds")
+	rows, err := s.db.Query("SELECT id, url, feed_name FROM feeds")
 	if err != nil {
 		return nil, err
 	}
@@ -135,7 +137,7 @@ func (s *sqliteDB) ListFeeds() ([]Feed, error) {
 	var feeds []Feed
 	for rows.Next() {
 		var f Feed
-		if err := rows.Scan(&f.ID, &f.URL); err != nil {
+		if err := rows.Scan(&f.ID, &f.URL, &f.FeedName); err != nil {
 			return nil, err
 		}
 		feeds = append(feeds, f)

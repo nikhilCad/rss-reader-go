@@ -15,11 +15,11 @@ export async function fetchPosts(): Promise<PostResponse> {
   return await res.json();
 }
 
-export async function addFeed(url: string) {
+export async function addFeed(url: string, name: string) {
   await fetch("/feeds", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ url }),
+    body: JSON.stringify(name ? { url, name } : { url }),
   });
 }
 

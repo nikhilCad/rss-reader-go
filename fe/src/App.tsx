@@ -7,7 +7,9 @@ import NavSidebar from "./components/NavSidebar";
 import FeedControls from "./components/FeedControls";
 
 export interface Feed {
+  id: number;
   url: string;
+  feed_name: string;
 }
 
 export interface PostResponse {
@@ -45,9 +47,12 @@ export default function App() {
 
   const grouped: Record<string, Post[]> = {};
   posts?.forEach((post) => {
-    const source = post.source || "Feed";
-    if (!grouped[source]) grouped[source] = [];
-    grouped[source].push(post);
+    const feed = feeds.find(
+      (f) => f.url === post.source || f.feed_name === post.source
+    );
+    const key = feed?.feed_name || post.source || "Feed";
+    if (!grouped[key]) grouped[key] = [];
+    grouped[key].push(post);
   });
 
   const [activePage, setActivePage] = useState("home");

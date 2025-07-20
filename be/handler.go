@@ -1,9 +1,39 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
+	"io"
 	"net/http"
+	"time"
+
+	"github.com/mmcdole/gofeed"
 )
+
+// FetchFeedTitle tries to fetch the RSS feed and extract its <title>
+func FetchFeedTitle(url string) string {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	req, err := http.NewRequestWithContext(ctx, "GET", url, nil)
+	if err != nil {
+		return url
+	}
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return url
+	}
+	defer resp.Body.Close()
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return url
+	}
+	fp := gofeed.NewParser()
+	feed, err := fp.ParseString(string(body))
+	if err != nil || feed.Title == "" {
+		return url
+	}
+	return feed.Title
+}
 
 // postsHandler returns all posts from all feeds in the database as JSON
 func postsHandler(w http.ResponseWriter, r *http.Request) {
@@ -36,13 +66,18 @@ func feedsHandler(w http.ResponseWriter, r *http.Request) {
 		json.NewEncoder(w).Encode(feeds)
 	case http.MethodPost:
 		var req struct {
-			URL string `json:"url"`
+			URL  string `json:"url"`
+			Name string `json:"name,omitempty"`
 		}
 		if err := json.NewDecoder(r.Body).Decode(&req); err != nil || req.URL == "" {
 			http.Error(w, "Invalid request", http.StatusBadRequest)
 			return
 		}
-		if err := db.AddFeed(req.URL); err != nil {
+		name := req.Name
+		if name == "" {
+			name = FetchFeedTitle(req.URL)
+		}
+		if err := db.AddFeed(req.URL, name); err != nil {
 			http.Error(w, "Failed to add feed", http.StatusInternalServerError)
 			return
 		}

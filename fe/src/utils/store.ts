@@ -15,7 +15,7 @@ interface StoreState {
   selected: Post | null;
   refreshing: boolean;
   reload: () => Promise<void>;
-  addFeedUrl: (url: string) => Promise<void>;
+  addFeedUrl: (url: string, feed_name: string) => Promise<void>;
   removeFeedUrl: (url: string) => Promise<void>;
   markAsRead: (link: string) => Promise<void>;
   markAsUnread: (link: string) => Promise<void>;
@@ -47,8 +47,8 @@ export const useStore = create<StoreState>((set, get) => ({
     }
   },
 
-  addFeedUrl: async (url) => {
-    await addFeed(url);
+  addFeedUrl: async (url, name) => {
+    await addFeed(url, name);
     await get().reload();
   },
 
