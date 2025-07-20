@@ -34,8 +34,7 @@ export default function Article({
 
   if (!post) return null;
 
-  const content =
-    post.title + (parsed ? parsed.content : post.description || post.content);
+  const content = parsed ? parsed.content : post.description || post.content;
 
   return (
     <div id="article-detail">
@@ -48,7 +47,7 @@ export default function Article({
           setParsed(parsed);
           setError(error);
         }}
-        content={content}
+        content={post.title + content}
       />
       <h2>{post.title}</h2>
       <a href={post.link} target="_blank" rel="noopener noreferrer">
