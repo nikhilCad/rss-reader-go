@@ -79,8 +79,12 @@ func NewSQLiteDB(path string) (DB, error) {
 			content TEXT,
 			source TEXT,
 			pubdate TEXT,
-			fetched_at TEXT
-		);`
+			fetched_at TEXT,
+			enclosure_url TEXT,     
+			enclosure_type TEXT,    
+			enclosure_length TEXT    
+		);
+`
 	_, err = db.Exec(createArticlesTableSQL)
 	if err != nil {
 		return nil, err

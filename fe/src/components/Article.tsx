@@ -54,6 +54,24 @@ export default function Article({
         Read original
       </a>
       {error && <div style={{ color: "red" }}>Error: {error}</div>}
+      {post.enclosure && post.enclosure.url && (
+        <div className="podcast-enclosure">
+          {/* If it's audio, show a player. Otherwise, show a download link */}
+          {post.enclosure.type?.startsWith("audio") ? (
+            <audio controls src={post.enclosure.url} style={{ width: "100%" }}>
+              Your browser does not support the audio element.
+            </audio>
+          ) : (
+            <a
+              href={post.enclosure.url}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Download media
+            </a>
+          )}
+        </div>
+      )}
       <div
         style={{ marginTop: "1em" }}
         dangerouslySetInnerHTML={{

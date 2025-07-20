@@ -1,6 +1,7 @@
 package main
 
 import (
+	"database/sql"
 	"io"
 	"log"
 	"net/http"
@@ -69,40 +70,110 @@ func RefreshAllFeeds() error {
 }
 
 // GetCachedArticles returns all cached articles from the DB.
-func GetCachedArticles() ([]Post, error) {
-	rows, err := db.(*sqliteDB).db.Query(`
-		SELECT title, link, description, content, source, pubdate FROM articles
-		ORDER BY pubdate DESC
+// If the DB is nil, it logs a warning and returns an empty slice.
+func GetCachedArticles(db interface{}) ([]Post, error) {
+	// Defensive: Check if db is nil or not the expected type before querying
+	sqliteDB, ok := db.(*sqliteDB)
+	if !ok || sqliteDB.db == nil {
+		log.Println("WARNING: Database handle is nil in GetCachedArticles, returning empty result")
+		return []Post{}, nil // Proceed with empty result, no error
+	}
+
+	// Query the articles table, including enclosure fields
+	rows, err := sqliteDB.db.Query(`
+		SELECT title, link, description, content, source, pubdate, enclosure_url, enclosure_type, enclosure_length
+		FROM articles
 	`)
 	if err != nil {
+		log.Printf("DB query error in GetCachedArticles: %v", err)
 		return nil, err
 	}
 	defer rows.Close()
 
-	var articles []Post
+	var posts []Post
 	for rows.Next() {
-		var p Post
-		err := rows.Scan(&p.Title, &p.Link, &p.Description, &p.Content, &p.Source, &p.PubDate)
+		var post Post
+		var enclosureURL, enclosureType, enclosureLength sql.NullString
+
+		err := rows.Scan(
+			&post.Title,
+			&post.Link,
+			&post.Description,
+			&post.Content,
+			&post.Source,
+			&post.PubDate,
+			&enclosureURL,
+			&enclosureType,
+			&enclosureLength,
+		)
 		if err != nil {
-			continue
+			log.Printf("Row scan error in GetCachedArticles: %v", err)
+			continue // Skip this row, but keep going
 		}
-		articles = append(articles, p)
+
+		// Only set Enclosure if URL is present
+		if enclosureURL.Valid && enclosureURL.String != "" {
+			post.Enclosure = &Enclosure{
+				URL:    enclosureURL.String,
+				Type:   enclosureType.String,
+				Length: enclosureLength.String,
+			}
+		}
+
+		posts = append(posts, post)
 	}
-	return articles, nil
+
+	return posts, nil
 }
 
 // upsertArticle inserts or updates an article in the DB.
 func upsertArticle(p Post, source string) error {
 	_, err := db.(*sqliteDB).db.Exec(`
-		INSERT INTO articles (title, link, description, content, source, pubdate, fetched_at)
-		VALUES (?, ?, ?, ?, ?, ?, ?)
-		ON CONFLICT(link) DO UPDATE SET
-			title=excluded.title,
-			description=excluded.description,
-			content=excluded.content,
-			source=excluded.source,
-			pubdate=excluded.pubdate,
-			fetched_at=excluded.fetched_at
-	`, p.Title, p.Link, p.Description, p.Content, source, p.PubDate, time.Now().Format(time.RFC3339))
+	INSERT INTO articles (
+		title, link, description, content, source, pubdate, fetched_at,
+		enclosure_url, enclosure_type, enclosure_length
+	)
+	VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+	ON CONFLICT(link) DO UPDATE SET
+		title=excluded.title,
+		description=excluded.description,
+		content=excluded.content,
+		source=excluded.source,
+		pubdate=excluded.pubdate,
+		fetched_at=excluded.fetched_at,
+		enclosure_url=excluded.enclosure_url,
+		enclosure_type=excluded.enclosure_type,
+		enclosure_length=excluded.enclosure_length
+`,
+		p.Title,
+		p.Link,
+		p.Description,
+		p.Content,
+		source,
+		p.PubDate,
+		time.Now().Format(time.RFC3339),
+		// Enclosure fields: use empty string if nil
+		func() string {
+			if p.Enclosure != nil {
+				return p.Enclosure.URL
+			} else {
+				return ""
+			}
+		}(),
+		func() string {
+			if p.Enclosure != nil {
+				return p.Enclosure.Type
+			} else {
+				return ""
+			}
+		}(),
+		func() string {
+			if p.Enclosure != nil {
+				return p.Enclosure.Length
+			} else {
+				return ""
+			}
+		}(),
+	)
 	return err
 }

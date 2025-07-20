@@ -17,12 +17,20 @@ export interface PostResponse {
   articles: Post[];
 }
 
+export interface Enclosure {
+  url: string;
+  type?: string;
+  length?: string;
+}
+
 export interface Post {
   title: string;
   link: string;
   description: string;
   source?: string;
   content: string;
+  pubdate: string;
+  enclosure?: Enclosure;
 }
 
 export default function App() {
@@ -100,13 +108,14 @@ export default function App() {
             Settings page (coming soon)
             <ul>
               <li>Parse Youtube Links</li>
-              <li>Podcast</li>
               <li>Better UI</li>
               <li>Better Feed Management</li>
               <li>AI summary of all feed titles</li>
               <li>AI summary of fetched feed content</li>
               <li>Better full article fetching</li>
               <li>Actual Setting Page</li>
+              <li>Podcast - Done</li>
+              <li>TTS - Done</li>
             </ul>
           </div>
         )}

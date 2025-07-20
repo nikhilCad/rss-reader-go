@@ -63,7 +63,7 @@ func FetchFeedTitle(url string) string {
 
 // postsHandler returns all posts from all feeds in the database as JSON
 func postsHandler(w http.ResponseWriter, r *http.Request) {
-	articles, err := GetCachedArticles()
+	articles, err := GetCachedArticles(db)
 	if err != nil {
 		http.Error(w, "Failed to fetch cached articles", http.StatusInternalServerError)
 		return
