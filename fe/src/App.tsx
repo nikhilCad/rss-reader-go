@@ -1,10 +1,9 @@
 import { useEffect, useState } from "preact/hooks";
 import "./app.css";
-import Sidebar from "./components/Sidebar";
-import Article from "./components/Article";
 import { useStore } from "./utils/store";
 import NavSidebar from "./components/NavSidebar";
 import FeedControls from "./components/FeedControls";
+import Home from "./components/Home";
 
 export interface Feed {
   id: number;
@@ -37,16 +36,9 @@ export default function App() {
   const {
     feeds,
     posts,
-    readLinks,
-    selected,
-    refreshing,
     reload,
     addFeedUrl,
     removeFeedUrl,
-    markAsRead,
-    markAsUnread,
-    setSelected,
-    refreshFeeds,
   } = useStore();
 
   useEffect(() => {
@@ -70,31 +62,9 @@ export default function App() {
       <NavSidebar active={activePage} setActive={setActivePage} />
       <div style={{ marginLeft: 60 }}>
         {activePage === "home" && (
-          <>
-            <div id="toolbar">
-              <button onClick={refreshFeeds} disabled={refreshing}>
-                {refreshing ? "Refreshing..." : "Refresh Feeds"}
-              </button>
-            </div>
-            <div id="main-container">
-              <div id="left-pane">
-                <Sidebar
-                  grouped={grouped}
-                  readLinks={readLinks}
-                  selected={selected}
-                  setSelected={setSelected}
-                />
-              </div>
-              <div id="right-pane">
-                <Article
-                  post={selected}
-                  isRead={!!(selected && readLinks.has(selected.link))}
-                  markRead={markAsRead}
-                  markUnread={markAsUnread}
-                />
-              </div>
-            </div>
-          </>
+          <Home
+            grouped={grouped}
+          />
         )}
         {activePage === "feeds" && (
           <FeedControls

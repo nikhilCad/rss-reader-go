@@ -1,4 +1,6 @@
 import "./NavSidebar.css";
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faHouse, faRssSquare, faGear } from '@fortawesome/free-solid-svg-icons'
 
 interface NavSidebarProps {
   active: string;
@@ -13,21 +15,21 @@ export default function NavSidebar({ active, setActive }: NavSidebarProps) {
         title="Home"
         onClick={() => setActive("home")}
       >
-        🏠
+        <FontAwesomeIcon icon={faHouse} />
       </div>
       <div
         className={`nav-icon${active === "feeds" ? " active" : ""}`}
         title="Manage Feeds"
         onClick={() => setActive("feeds")}
       >
-        📚
+        <FontAwesomeIcon icon={faRssSquare} />
       </div>
       <div
         className={`nav-icon${active === "settings" ? " active" : ""}`}
         title="Settings"
         onClick={() => setActive("settings")}
       >
-        ⚙️
+        <FontAwesomeIcon icon={faGear} />
       </div>
     </nav>
   );
