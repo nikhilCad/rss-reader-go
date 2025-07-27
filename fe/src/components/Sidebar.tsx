@@ -5,6 +5,8 @@ interface SidebarProps {
   readLinks: Set<string>;
   selected: Post | null;
   setSelected: (post: Post) => void;
+  showUnread: boolean;
+  markAsRead: (link: string) => Promise<void>;
 }
 
 export default function Sidebar({
@@ -12,13 +14,17 @@ export default function Sidebar({
   readLinks,
   selected,
   setSelected,
+  showUnread,
+  markAsRead,
 }: SidebarProps) {
   return (
     <div id="sidebar">
       {Object.keys(grouped).map((source) => (
         <div key={source}>
           <div className="feed-source">{source}</div>
-          {grouped[source].map((post) => (
+          {grouped[source]
+          .filter((post) => showUnread ? true : !readLinks.has(post.link))
+          .map((post) => (
             <a
               className={`article-title${
                 readLinks.has(post.link) ? " read" : ""
@@ -27,6 +33,7 @@ export default function Sidebar({
               onClick={(e) => {
                 e.preventDefault();
                 setSelected(post);
+                markAsRead(post.link);
               }}
               key={post.link}
             >

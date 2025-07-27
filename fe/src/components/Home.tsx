@@ -1,6 +1,6 @@
 import Sidebar from "./Sidebar";
 import Article from "./Article";
-import { useEffect } from "preact/hooks";
+import { useEffect, useState } from "preact/hooks";
 import { Post } from "App";
 import { useStore } from "../utils/store";
 
@@ -22,6 +22,7 @@ export default function Home({ grouped }: HomeProps) {
   } = useStore();
 
 
+  const [showUnread, setShowUnread] = useState(true);
   useEffect(() => {
 
     const handleGlobalSpacePress = (event: KeyboardEvent) => {
@@ -52,6 +53,9 @@ export default function Home({ grouped }: HomeProps) {
         <button onClick={refreshFeeds} disabled={refreshing}>
           {refreshing ? "Refreshing..." : "Refresh Feeds"}
         </button>
+        <button onClick={ () => setShowUnread(!showUnread)}>
+          {showUnread ? "Showing: All" : "Showing: Unread"}
+        </button>
       </div>
       <div id="main-container">
         <div id="left-pane">
@@ -60,6 +64,8 @@ export default function Home({ grouped }: HomeProps) {
             readLinks={readLinks}
             selected={selected}
             setSelected={setSelected}
+            showUnread={showUnread}
+            markAsRead={markAsRead}
           />
         </div>
         <div id="right-pane">
